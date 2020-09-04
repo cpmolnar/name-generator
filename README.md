@@ -1,6 +1,6 @@
 ## Description
 A minimal Name Generator AI built with basic TensorFlow. Use me to generate some unique names!  
-The model was trained on a dataset containing 47274 English names.  
+The model learns on a dataset containing 47274 English names, located in the `dataset` folder.  
 
 Intended as a getting-started example of how to implement NLP in TensorFlow.
 

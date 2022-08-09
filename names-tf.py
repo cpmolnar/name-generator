@@ -1,4 +1,5 @@
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 import numpy as np
 import matplotlib.pyplot as plt
 import random
@@ -96,13 +97,13 @@ def create_minibatches(x, y, seq_len):
     return minibatches, num_minibatches
 
 # Placeholders for inputs(x), input sequence lengths (seqLen) and outputs(y)
-x = tf.placeholder(tf.float32, [None, time_steps, input_dim])
-y = tf.placeholder(tf.float32, [None, out_dim])
-seqLen = tf.placeholder(tf.int32, [None])
+x = tf.compat.v1.placeholder(tf.float32, [None, time_steps, input_dim])
+y = tf.compat.v1.placeholder(tf.float32, [None, out_dim])
+seqLen = tf.compat.v1.placeholder(tf.int32, [None])
 
 # Define weights and biases
-weights = {'out': tf.Variable(tf.random_normal([num_hidden_units, out_dim]))}
-biases = {'out': tf.Variable(tf.random_normal([out_dim]))}
+weights = {'out': tf.Variable(tf.random.normal([num_hidden_units, out_dim]))}
+biases = {'out': tf.Variable(tf.random.normal([out_dim]))}
 
 def RNN(x):
     x = tf.unstack(x, time_steps, 1)
@@ -110,13 +111,13 @@ def RNN(x):
     cells = []
     # Define a lstm cell with tensorflow
     for i in range(num_layers):
-        lstm_cell = tf.nn.rnn_cell.LSTMCell(num_hidden_units)
-        lstm_cell = tf.nn.rnn_cell.DropoutWrapper(lstm_cell, keep_prob)
+        lstm_cell = tf.compat.v1.nn.rnn_cell.LSTMCell(num_hidden_units)
+        lstm_cell = tf.compat.v1.nn.rnn_cell.DropoutWrapper(lstm_cell, keep_prob)
         cells.append(lstm_cell)
-    lstm_cell = tf.nn.rnn_cell.MultiRNNCell(cells)
+    lstm_cell = tf.compat.v1.nn.rnn_cell.MultiRNNCell(cells)
 
     # Get lstm cell output
-    outputs, states = tf.nn.static_rnn(lstm_cell, x, dtype=tf.float32)
+    outputs, states = tf.compat.v1.nn.static_rnn(lstm_cell, x, dtype=tf.float32)
     
     return tf.matmul(outputs[-1], weights['out']) + biases['out']
 
@@ -125,22 +126,22 @@ logits = RNN(x)
 prediction = tf.nn.softmax(logits)
 
 # Define the loss function (i.e. mean-squared error loss) and optimizer
-cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
-    logits=logits, labels=y))
-optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
+cost = tf.reduce_mean(input_tensor=tf.nn.softmax_cross_entropy_with_logits(
+    logits=logits, labels=tf.stop_gradient(y)))
+optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
 
 # Creating the op for initializing all variables
-init = tf.global_variables_initializer()
+init = tf.compat.v1.global_variables_initializer()
 
 # Calculate accuracy on the test set
-correct_prediction = tf.equal(tf.argmax(prediction, axis=1), tf.argmax(y, axis=1))
-accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
+correct_prediction = tf.equal(tf.argmax(input=prediction, axis=1), tf.argmax(input=y, axis=1))
+accuracy = tf.reduce_mean(input_tensor=tf.cast(correct_prediction, "float"))
 
 # Training and test cost arrays for plotting
 train_costs=[]
 test_costs=[]
 
-with tf.Session() as sess:
+with tf.compat.v1.Session() as sess:
     sess.run(init)
     start_time = time.time()
     print('--------------------------\n|        Training        |\n--------------------------')
@@ -210,4 +211,3 @@ with tf.Session() as sess:
 
             if next_char == '\n':
                 break
-    
